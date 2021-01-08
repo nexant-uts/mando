@@ -1,0 +1,281 @@
+#!/usr/bin/env bash
+
+UNAMEOUT="$(uname -s)"
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+CONTAINER_WEB="web"
+CONTAINER_MYSQL="mysql"
+CONTAINER_NODE="node"
+
+case "${UNAMEOUT}" in
+    Linux*)             MACHINE=linux;;
+    Darwin*)            MACHINE=mac;;
+    *)                  MACHINE="UNKNOWN"
+esac
+
+if [ "$MACHINE" == "UNKNOWN" ]; then
+    echo "Unsupported operating system [$(uname -s)]. Mando supports macOS, Linux, and Windows (WSL2)." >&2
+
+    exit 1
+fi
+
+export WWWUSER=${WWWUSER:-$UID}
+export WWWGROUP=${WWWGROUP:-$(id -g)}
+export MANDOPATH="$(dirname $(dirname $0))"
+
+
+# Ensure that Docker is running...
+if ! docker info > /dev/null 2>&1; then
+    echo -e "${WHITE}Docker is not running.${NC}" >&2
+
+    exit 1
+fi
+
+# Determine if Mando is currently up...
+PSRESULT="$(docker-compose ps -q)"
+
+if docker-compose ps | grep 'Exit' &> /dev/null; then
+    docker-compose down > /dev/null 2>&1
+
+    EXEC="no"
+elif [ -n "$PSRESULT" ]; then
+    EXEC="yes"
+else
+    EXEC="no"
+fi
+
+
+# Function that outputs Mando is not running...
+function mando_is_not_running {
+    echo -e "${WHITE}Mando is not running.${NC}" >&2
+    echo "" >&2
+    echo -e "${WHITE}You may Mando using the following commands:${NC} 'mando up' or 'mando up '" >&2
+
+    exit 1
+}
+
+
+if [ $# -gt 0 ]; then
+    # Source the ".env" file so Laravel's environment variables are available...
+    if [ -f ./.env ]; then
+        source ./.env
+    fi
+
+    # Proxy PHP commands to the "php" binary on the application container...
+    if [ "$1" == "php" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_WEB" \
+                php "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Proxy Composer commands to the "composer" binary on the application container...
+    elif [ "$1" == "composer" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_WEB" \
+                composer "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Proxy Artisan commands to the "artisan" binary on the application container...
+    elif [ "$1" == "artisan" ] || [ "$1" == "art" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_WEB" \
+                php artisan "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Proxy the "test" command to the "php artisan test" Artisan command...
+    elif [ "$1" == "test" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_WEB" \
+                php artisan test "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Proxy the "dusk" command to the "php artisan dusk" Artisan command...
+    elif [ "$1" == "dusk" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                -e "APP_URL=http://laravel.test" \
+                -e "DUSK_DRIVER_URL=http://selenium:4444/wd/hub" \
+                "$CONTAINER_WEB" \
+                php artisan dusk "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Initiate a Laravel Tinker session within the application container...
+    elif [ "$1" == "tinker" ] ; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_WEB" \
+                php artisan tinker
+        else
+            mando_is_not_running
+        fi
+
+        elif [ "$1" == "queue" ] ; then
+            shift 1
+
+            if [ "$EXEC" == "yes" ]; then
+                docker-compose exec \
+                    -u developer \
+                    "$CONTAINER_WEB" \
+                    php artisan queue:listen
+            else
+                mando_is_not_running
+            fi
+
+        elif [ "$1" == "horizon" ] ; then
+            shift 1
+
+            if [ "$EXEC" == "yes" ]; then
+                docker-compose exec \
+                    -u developer \
+                    "$CONTAINER_WEB" \
+                    php artisan horizon
+            else
+                mando_is_not_running
+            fi
+
+    # Proxy Node commands to the "node" binary on the application container...
+    elif [ "$1" == "node" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_NODE" \
+                node "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Proxy NPM commands to the "npm" binary on the application container...
+    elif [ "$1" == "npm" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_NODE" \
+                npm "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Proxy NPX commands to the "npx" binary on the application container...
+    elif [ "$1" == "npx" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_NODE" \
+                npx "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Proxy YARN commands to the "yarn" binary on the application container...
+    elif [ "$1" == "yarn" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_NODE" \
+                yarn "$@"
+        else
+            mando_is_not_running
+        fi
+
+    # Initiate a MySQL CLI terminal session within the "mysql" container...
+    elif [ "$1" == "mysql" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                mysql \
+                bash -c 'MYSQL_PWD=${MYSQL_ROOT_PASSWORD} mysql -u ${MYSQL_USER} ${MYSQL_DATABASE}'
+        else
+            mando_is_not_running
+        fi
+
+    # Initiate a Bash shell within the application container...
+    elif [ "$1" == "shell" ] || [ "$1" == "bash" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                -u developer \
+                "$CONTAINER_WEB" \
+                bash
+        else
+            mando_is_not_running
+        fi
+
+    # Initiate a root user Bash shell within the application container...
+    elif [ "$1" == "root-shell" ] ; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker-compose exec \
+                "$CONTAINER_WEB" \
+                bash
+        else
+            mando_is_not_running
+        fi
+
+    # Share the site...
+    elif [ "$1" == "share" ]; then
+        shift 1
+
+        if [ "$EXEC" == "yes" ]; then
+            docker run --init beyondcodegmbh/expose-server share http://host.docker.internal:"$APP_PORT" \
+            --server-host=laravel-sail.site \
+            --server-port=8080 \
+            "$@"
+        else
+            mando_is_not_running
+        fi
+
+    elif [ "$1" == "up" ]; then
+        shift 1
+        docker-compose up -d "$@"
+
+    # Pass unknown commands to the "docker-compose" binary...
+    else
+        docker-compose "$@"
+    fi
+else
+    docker-compose ps
+fi
