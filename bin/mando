@@ -279,11 +279,11 @@ if [ $# -gt 0 ]; then
         # Display Help
         echo "Mando is a docker compose wrapper with laravel specific commands defined to run inside specific containers."
         echo
-        echo "Syntax: mando [command] [arguments/options to append to underlying command]"
+        echo "Usage: mando [command] [arguments/options to append to underlying command]"
         echo ""
         echo "Deafult (no command): Lists currently running containers (\`docker-compose ps\`)."
         echo ""
-        echo "Commands:"
+        echo "Available commands:"
         echo "artisan/art            Runs \`php artisan\` in the web container."
         echo "composer               Runs \`composer\` in the web container."
         echo "help/list              Print this help information."
