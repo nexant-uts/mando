@@ -288,7 +288,7 @@ if [ $# -gt 0 ]; then
         echo "composer               Runs \`composer\` in the web container."
         echo "help/list              Print this help information."
         echo "horizon                Runs \`php artisan horizon\` in the web container."
-        echo "mysql                  Connects to MySql running in the databse container."
+        echo "mysql                  Connects to MySql running in the database container."
         echo "php                    Runs \`php\` in web container."
         echo "root-shell             Command line access as root user in the web container."
         echo "shell/bash             Command line access as normal user in web container."
