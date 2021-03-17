@@ -27,7 +27,7 @@ RUN apt-get update \
         php$PHP-intl php$PHP-readline php$PHP-xdebug php$PHP-pcov \
         php$PHP-msgpack php$PHP-igbinary  php$PHP-imagick \
         php$PHP-ldap php$PHP-gmp \
-        php-redis \
+        php$PHP-redis \
     && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer \
     && mkdir -p /run/php \
     && wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.focal_amd64.deb \
