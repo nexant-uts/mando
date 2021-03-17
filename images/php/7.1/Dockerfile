@@ -27,7 +27,7 @@ RUN apt-get update \
         php$PHP-intl php$PHP-readline php$PHP-xdebug php$PHP-pcov \
         php$PHP-msgpack php$PHP-igbinary  php$PHP-imagick \
         php$PHP-ldap php$PHP-gmp \
-        php$PHP-redis \
+        php-redis \
     && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer \
     && mkdir -p /run/php \
     && wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.focal_amd64.deb \
@@ -45,12 +45,12 @@ RUN apt-get update \
     && sed -i 's/^;daemonize.*$/daemonize = no/g' /etc/php/$PHP/fpm/php-fpm.conf \
     && sed -i 's@^error_log.*$@error_log = /proc/self/fd/2@g' /etc/php/$PHP/fpm/php-fpm.conf
 
-COPY $PHP/default /etc/nginx/sites-available/default
-COPY $PHP/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY default /etc/nginx/sites-available/default
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY xdebug.ini /etc/php/$PHP/fpm/conf.d/99-custom_xdebug.ini
 COPY xdebug.ini /etc/php/$PHP/cli/conf.d/99-custom_xdebug.ini
 
-COPY $PHP/entrypoint /usr/local/bin/entrypoint
+COPY entrypoint /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint
 
 
