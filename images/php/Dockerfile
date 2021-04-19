@@ -15,7 +15,16 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update \
     && apt-get install -y gosu gnupg ca-certificates wget curl gzip zip unzip git \
-       supervisor sqlite3 fontconfig libxrender1 xfonts-75dpi xfonts-base \
+    supervisor sqlite3 fontconfig libxrender1 xfonts-75dpi xfonts-base \
+    && echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y ttf-mscorefonts-installer \
+    && fc-cache -f \
+    && wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.focal_amd64.deb \
+    &&  apt install -y ./wkhtmltox_0.12.6-1.focal_amd64.deb \
+    && rm ./wkhtmltox_0.12.6-1.focal_amd64.deb
+
+
+RUN apt-get update \
     && echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu focal main" > /etc/apt/sources.list.d/ppa_ondrej_php.list \
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E5267A6C \
     && apt-get update \
@@ -30,9 +39,6 @@ RUN apt-get update \
         php$PHP-redis \
     && php -r "readfile('http://getcomposer.org/installer');" | php -- --install-dir=/usr/bin/ --filename=composer \
     && mkdir -p /run/php \
-    && wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.focal_amd64.deb \
-    && apt install ./wkhtmltox_0.12.6-1.focal_amd64.deb \
-    && rm ./wkhtmltox_0.12.6-1.focal_amd64.deb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && sed -i "s/pm\.max_children = .*/pm.max_children = 20/" /etc/php/$PHP/fpm/pool.d/www.conf \
