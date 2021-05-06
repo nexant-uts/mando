@@ -272,6 +272,31 @@ if [ $# -gt 0 ]; then
         shift 1
         docker-compose up -d "$@"
 
+
+    elif [ "$1" == "help" ] || [ "$1" == "list" ]; then
+        shift 1
+
+        # Display Help
+        echo "Mando is a docker compose wrapper with laravel specific commands defined to run inside specific containers."
+        echo
+        echo "Usage: mando [command] [arguments/options to append to underlying command]"
+        echo ""
+        echo "Deafult (no command): Lists currently running containers (\`docker-compose ps\`)."
+        echo ""
+        echo "Available commands:"
+        echo "artisan/art            Runs \`php artisan\` in the web container."
+        echo "composer               Runs \`composer\` in the web container."
+        echo "help/list              Print this help information."
+        echo "horizon                Runs \`php artisan horizon\` in the web container."
+        echo "mysql                  Connects to MySql running in the database container."
+        echo "php                    Runs \`php\` in web container."
+        echo "root-shell             Command line access as root user in the web container."
+        echo "shell/bash             Command line access as normal user in web container."
+        echo "test                   Runs \`phpunit\` in the web container."
+        echo "tinker                 Runs \`php artisan tinker\` in the web container."
+        echo "up                     Runs \`docker-compose up -d\`"
+        echo "[unknown command]      Runs \`docker-compose [command]\`"
+
     # Pass unknown commands to the "docker-compose" binary...
     else
         docker-compose "$@"
